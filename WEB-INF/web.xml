@@ -1,10 +1,16 @@
 <web-app xmlns="http://java.sun.com/xml/ns/javaee" version="3.0">
     <servlet>
-        <servlet-name>RootServlet</servlet-name>
+        <servlet-name>Root</servlet-name>
         <servlet-class>RootServlet</servlet-class>
     </servlet>
     <servlet-mapping>
-        <servlet-name>RootServlet</servlet-name>
-        <url-pattern></url-pattern>
+        <servlet-name>Root</servlet-name>
+        <url-pattern>/</url-pattern>
     </servlet-mapping>
+
+<servlet-mapping>
+    <servlet-name>default</servlet-name>
+    <url-pattern>/static/*</url-pattern>
+</servlet-mapping>
+
 </web-app>
