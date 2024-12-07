@@ -30,7 +30,7 @@
     <nav class="bg-white shadow-lg p-6">
         <div class="max-w-5xl mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-4">
-                <img src="${pageContext.request.contextPath}/images/logo_sjsu.jpeg" alt="Library Logo" class="w-16 h-16">
+                <img src="${pageContext.request.contextPath}/static/images/logo_sjsu.svg" alt="Library Logo" class="w-16 h-16">
                 <h1 class="text-3xl font-bold text-blue-600">${libraryName}</h1>
             </div>
             <div class="flex items-center">
