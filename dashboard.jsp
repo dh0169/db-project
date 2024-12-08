@@ -146,11 +146,8 @@
         </div>
     </div>
 
-    <!-- Footer - Simplified for kiosk -->
-    <footer class="bg-white py-6 mt-8">
-        <div class="max-w-5xl mx-auto text-center text-gray-600 text-xl">
-            <p>Touch screen to interact • ${libraryName}</p>
-        </div>
-    </footer>
+        <footer class="mt-10 text-gray-500">
+            &copy; 2024 Oasis Library Management System. All rights reserved.
+        </footer>
 </body>
 </html>

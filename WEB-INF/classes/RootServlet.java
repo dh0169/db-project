@@ -1,15 +1,32 @@
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.logging.Logger;
 import java.io.IOException;
 import java.sql.Connection;
 
 public class RootServlet extends HttpServlet {
+    private static final Logger logger = Logger.getLogger(RootServlet.class.getName());
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String path = request.getServletPath(); // Determine the requested route
+        
+        // Determine the requested route
+        String path = request.getServletPath();
+
+        //Get Session
+        HttpSession session = request.getSession();
+
+
+        // Log session details
+        logger.info("=== Session Details ===");
+        logger.info("Session ID: " + session.getId());
+        logger.info("Creation Time: " + new java.util.Date(session.getCreationTime()));
+        logger.info("Last Accessed Time: " + new java.util.Date(session.getLastAccessedTime()));
+
 
         switch (path) {
             case "/":
