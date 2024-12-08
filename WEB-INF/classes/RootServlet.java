@@ -28,6 +28,9 @@ public class RootServlet extends HttpServlet {
         logger.info("Last Accessed Time: " + new java.util.Date(session.getLastAccessedTime()));
 
 
+        UserDAO ud = new UserDAO();
+
+
         switch (path) {
             case "/":
                 handleHome(request, response);
