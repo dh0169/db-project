@@ -62,26 +62,27 @@
             </div>
 
             <!-- Quick Stats - Larger, more touch-friendly -->
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">Hello ${sessionScope.user.name}!</h2>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
                 <div class="bg-blue-50 rounded-xl p-8 text-center touch-manipulation">
                     <i class="fas fa-book text-5xl text-blue-600 mb-4"></i>
                     <h3 class="text-2xl font-semibold text-gray-800">Books Checked Out</h3>
-                    <p class="text-3xl font-bold text-blue-600 mt-2">${userStats.checkedOutBooks}</p>
+                    <p class="text-3xl font-bold text-blue-600 mt-2">${checked_count}</p>
                 </div>
                 <div class="bg-green-50 rounded-xl p-8 text-center touch-manipulation">
                     <i class="fas fa-clock text-5xl text-green-600 mb-4"></i>
                     <h3 class="text-2xl font-semibold text-gray-800">Due Soon</h3>
-                    <p class="text-3xl font-bold text-green-600 mt-2">${userStats.dueSoonBooks}</p>
+                    <p class="text-3xl font-bold text-green-600 mt-2">${due_count}</p>
                 </div>
                 <div class="bg-purple-50 rounded-xl p-8 text-center touch-manipulation">
                     <i class="fas fa-history text-5xl text-purple-600 mb-4"></i>
                     <h3 class="text-2xl font-semibold text-gray-800">Total Borrowed</h3>
-                    <p class="text-3xl font-bold text-purple-600 mt-2">${userStats.totalBorrowed}</p>
+                    <p class="text-3xl font-bold text-purple-600 mt-2">${total_count}</p>
                 </div>
             </div>
 
             <!-- Admin Tools - Larger buttons for touch -->
-            <c:if test="${isAdmin}">
+            <c:if test="${user.isAdmin()}">
                 <div class="mb-8 p-6 bg-yellow-50 rounded-xl">
                     <h2 class="text-3xl font-bold text-gray-800 mb-6">Administrative Tools</h2>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -135,8 +136,8 @@
                         <tbody class="divide-y divide-gray-100">
                             <c:forEach items="${transactions}" var="transaction">
                                 <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-6 text-xl">${transaction.bookTitle}</td>
-                                    <td class="px-6 py-6 text-xl">${transaction.dueDate}</td>
+                                    <td class="px-6 py-6 text-xl">${transaction.book.title}</td>
+                                    <td class="px-6 py-6 text-xl">${transaction.returnDate}</td>
                                     <td class="px-6 py-6">
                                         <button class="bg-teal-500 text-white text-xl px-6 py-3 rounded-xl hover:bg-teal-600">
                                             <i class="fas fa-undo mr-2"></i>Return

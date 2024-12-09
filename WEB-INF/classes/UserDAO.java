@@ -141,10 +141,6 @@ public class UserDAO implements DAO<User> {
         return false;
     }
 
-        public static User logIn(String email, String password, HttpSession session){
-            //check email and hashed password, if they match database, set session['user_id'] = user.id
-            return null;
-    }
 
     // Hashes a string using SHA256
     public static String hashPassword(String password){

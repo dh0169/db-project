@@ -27,8 +27,9 @@ CREATE TABLE Transactions (
     book_id INT NOT NULL,
     checkout_date DATE NOT NULL,
     return_date DATE,
-    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
-    FOREIGN KEY (book_id) REFERENCES Books(id) ON DELETE CASCADE
+    completed BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (user_id) REFERENCES Users(id),
+    FOREIGN KEY (book_id) REFERENCES Books(id)
 );
 
 -- Create a new database user

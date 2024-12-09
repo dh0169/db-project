@@ -1,14 +1,14 @@
 public class Book {
-    private int id;
+    public int id;
     private String title;
     private String author;
-    private String ISBN;
+    private String isbn;
 
-    public Book(int id, String title, String author, String ISBN) {
+    public Book(int id, String title, String author, String isbn) {
         this.id = id;
         this.title = title;
         this.author = author;
-        this.ISBN = ISBN;
+        this.isbn = isbn;
     }
 
     public int getId() {
@@ -35,11 +35,11 @@ public class Book {
         this.author = author;
     }
 
-    public String getISBN() {
-        return ISBN;
+    public String getIsbn() {
+        return isbn;
     }
 
-    public void setISBN(String ISBN) {
-        this.ISBN = ISBN;
+    public void setIsbn(String isbn) {
+        this.isbn = isbn;
     }
 }

@@ -1,20 +1,25 @@
+import java.util.Date;
+
+
 public class Transaction {
     private int id;
     private User user;
     private Book book;
     private Date checkoutDate;
     private Date returnDate;
+    private Boolean completed;
 
-    public Transaction(int id, User user, Book book, Date checkoutDate, Date returnDate) {
+    public Transaction(int id, User user, Book book, Date checkoutDate, Date returnDate, Boolean completed) {
         this.id = id;
         this.user = user;
         this.book = book;
         this.checkoutDate = checkoutDate;
         this.returnDate = returnDate;
+        this.completed = completed;
     }
 
     public int getId() {
-        return id;
+        return this.id;
     }
 
     public void setId(int id) {
@@ -22,7 +27,7 @@ public class Transaction {
     }
 
     public User getUser() {
-        return user;
+        return this.user;
     }
 
     public void setUser(User user) {
@@ -38,7 +43,7 @@ public class Transaction {
     }
 
     public Date getCheckoutDate() {
-        return checkoutDate;
+        return this.checkoutDate;
     }
 
     public void setCheckoutDate(Date checkoutDate) {
@@ -46,7 +51,11 @@ public class Transaction {
     }
 
     public Date getReturnDate() {
-        return returnDate;
+        return this.returnDate;
+    }
+
+    public Boolean getCompleted() {
+        return this.completed;
     }
 
     public void setReturnDate(Date returnDate) {
