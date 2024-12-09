@@ -78,35 +78,98 @@
         }
     </style>
     <script>
-        function openReturnModal() {
+        let searchTimeout;
+
+        function handleSearchInput(event) {
+            clearTimeout(searchTimeout);
+            const query = event.target.value;
+
+            searchTimeout = setTimeout(() => {
+                if (query.trim() !== '') {
+                    fetch('/search', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({ query }),
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Search request failed');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        showSearchResults(data); // Display results in the modal
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+                }
+            }, 300); // 300ms delay
+        }
+
+
+        function openReturnModal(id) {
             document.getElementById("returnModal").style.display = "flex";
+            localStorage.setItem("return_id", id)
         }
 
         function closeReturnModal() {
             document.getElementById("returnModal").style.display = "none";
-            sendPostRequestToDashboard();
+            sendPostRequestToDashboard('return', {id: localStorage.getItem("return_id")})
+            localStorage.clear();
         }
 
-        function sendPostRequestToDashboard() {
+        function addUser(){
+            document.getElementById("returnModal").style.display = "none";
+            const name = document.getElementById("new_name").value;
+            const email = document.getElementById("new_email").value;
+            const pw = document.getElementById("new_password").value; 
+            sendPostRequestToDashboard("add_user", {name : name, email : email, password : pw})
+        }
+
+        function addBook() {
+            const title = document.getElementById("book_title").value;
+            const author = document.getElementById("book_author").value;
+            const isbn = document.getElementById("book_isbn").value;
+
+            if (title && author && isbn) {
+                sendPostRequestToDashboard("add_book", { title, author, isbn });
+                closeModal('addBookModal');
+            } else {
+                alert("Please fill out all fields.");
+            }
+        }
+
+        function checkOutBook(bookId) {
+            sendPostRequestToDashboard("check_out_book", { bookId });
+            alert("Book checked out successfully!");
+        }
+
+        function sendPostRequestToDashboard(action, json_data) {
             fetch('/dashboard', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                credentials: 'same-origin', // Ensures cookies and session context are included
-                body: JSON.stringify({ action: 'return' }) // Include any relevant data
+                credentials: 'same-origin',
+                body: JSON.stringify({ action, data: json_data })
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert("Error: " + data.message);
                 }
-                console.log('Post request successful!');
             })
             .catch(error => {
                 console.error('There was a problem with the fetch operation:', error);
             });
         }
-
         function openModal(modalId) {
             document.getElementById(modalId).style.display = "flex";
         }
@@ -116,21 +179,50 @@
         }
 
         function issueDatabaseDump() {
-            fetch('/databaseDump', {
-                method: 'POST',
-                credentials: 'same-origin'
-            })
-            .then(response => {
-                if (response.ok) {
-                    alert('Database dump completed successfully!');
-                } else {
-                    alert('Failed to complete database dump.');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
+            sendPostRequestToDashboard("db_dump", {});
         }
+
+        function showSearchResults(results) {
+            const searchResultsContainer = document.getElementById('searchResultsContainer');
+            searchResultsContainer.innerHTML = ''; // Clear previous results
+
+            if (results.length === 0) {
+                searchResultsContainer.innerHTML = '<p class="text-gray-500">No results found.</p>';
+                return;
+            }
+
+            const table = document.createElement('table');
+            table.className = 'w-full text-left';
+
+            const thead = document.createElement('thead');
+            thead.className = 'bg-gray-50';
+            thead.innerHTML = `
+                <tr>
+                    <th class="px-3 py-2 font-medium text-gray-600">Title</th>
+                    <th class="px-3 py-2 font-medium text-gray-600">Author</th>
+                    <th class="px-3 py-2 font-medium text-gray-600">ISBN</th>
+                </tr>`;
+            table.appendChild(thead);
+
+            const tbody = document.createElement('tbody');
+            tbody.className = 'divide-y divide-gray-200';
+
+            results.forEach(result => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-3 py-2">${result.title}</td>
+                    <td class="px-3 py-2">${result.author}</td>
+                    <td class="px-3 py-2">${result.isbn}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            table.appendChild(tbody);
+            searchResultsContainer.appendChild(table);
+
+            openModal('searchResultsModal');
+        }
+
     </script>
 </head>
 <body class="bg-blue-50 min-h-screen text-lg">
@@ -142,9 +234,11 @@
             <img src="${pageContext.request.contextPath}/static/images/logo_sjsu.svg" alt="Library Logo" class="w-14 h-14">
         </div>
         <div class="flex-1 max-w-lg">
-            <input type="text" 
-                   placeholder="Search by title, author, or ISBN..." 
-                   class="w-full px-4 py-3 text-base rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+           <input type="text" 
+                placeholder="Search by title, author, or ISBN..." 
+                class="w-full px-4 py-3 text-base rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                oninput="handleSearchInput(event)">
+
         </div>
         <div>
             <form action="logout" method="POST" class="flex items-center">
@@ -180,75 +274,80 @@
 
         <!-- Admin Tools -->
         <c:if test="${user.isAdmin()}">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                    <h3 class="text-2xl font-semibold text-gray-800 mb-4">Quick Actions</h3>
-                    <div class="space-y-4">
-                        <button class="w-full bg-blue-600 text-white text-xl px-6 py-4 rounded-xl hover:bg-blue-700" 
-                        onclick="openModal('addBookModal')">
-                            <i class="fas fa-plus-circle mr-2"></i>Add New Book
+            <div class="mb-8 p-6 bg-yellow-50 rounded-xl">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Administrative Tools</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-2xl font-semibold text-gray-800 mb-4">Quick Actions</h3>
+                        <div class="space-y-4">
+                            <button class="w-full bg-blue-600 text-white text-xl px-6 py-4 rounded-xl hover:bg-blue-700" 
+                            onclick="openModal('addBookModal')">
+                         <i class="fas fa-plus-circle mr-2"></i>Add New Book
                         </button>
-                        <button class="w-full bg-green-600 text-white text-xl px-6 py-4 rounded-xl hover:bg-green-700" 
-                                onclick="openModal('addUserModal')">
-                            <i class="fas fa-users mr-2"></i>Manage Users
-                        </button>
-                        <button class="w-full bg-purple-600 text-white text-xl px-6 py-4 rounded-xl hover:bg-purple-700"
-                                onclick="issueDatabaseDump()">
-                            <i class="fas fa-database mr-2"></i>Database Dump
-                        </button>
+                    
+                            <button class="w-full bg-green-600 text-white text-xl px-6 py-4 rounded-xl hover:bg-green-700" 
+                                    onclick="openModal('addUserModal')">
+                                <i class="fas fa-users mr-2"></i>Manage Users
+                            </button>
+                            <button class="w-full bg-purple-600 text-white text-xl px-6 py-4 rounded-xl hover:bg-purple-700"
+                                    onclick="issueDatabaseDump()">
+                                <i class="fas fa-database mr-2"></i>Database Dump
+                            </button>
+                        </div>
                     </div>
-                </div>
-                <div class="bg-white rounded-xl p-6 shadow">
-                    <h3 class="text-2xl font-semibold text-gray-800 mb-4">System Status</h3>
-                    <div class="space-y-4 text-xl">
-                        <div class="flex justify-between p-2">
-                            <span>Total Books:</span>
-                            <span class="font-semibold">${adminStats.totalBooks}</span>
-                        </div>
-                        <div class="flex justify-between p-2">
-                            <span>Books Out:</span>
-                            <span class="font-semibold">${adminStats.booksOut}</span>
-                        </div>
-                        <div class="flex justify-between p-2">
-                            <span>Active Users:</span>
-                            <span class="font-semibold">${adminStats.activeUsers}</span>
+                    <div>
+                        <div class="bg-white rounded-xl p-6 shadow">
+                            <h3 class="text-2xl font-semibold text-gray-800 mb-4">System Status</h3>
+                            <div class="space-y-4 text-xl">
+                                <div class="flex justify-between p-2">
+                                    <span>Total Books:</span>
+                                    <span class="font-semibold">${admin_total_books}</span>
+                                </div>
+                                <div class="flex justify-between p-2">
+                                    <span>Books Out:</span>
+                                    <span class="font-semibold">${admin_total_checked}</span>
+                                </div>
+                                <div class="flex justify-between p-2">
+                                    <span>Active Users:</span>
+                                    <span class="font-semibold">${admin_active_users}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </c:if>
 
-        <!-- Current Checkouts -->
-        <div class="mb-8">
-            <h2 class="text-3xl font-bold text-gray-800 mb-6">Current Checkouts</h2>
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="bg-gray-50 rounded-t-xl">
-                        <tr>
-                            <th class="px-6 py-4 text-left text-xl text-gray-600">Book Title</th>
-                            <th class="px-6 py-4 text-left text-xl text-gray-600">Due Date</th>
-                            <th class="px-6 py-4 text-left text-xl text-gray-600">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        <c:forEach items="${transactions}" var="transaction">
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-6 text-xl">${transaction.book.title}</td>
-                                <td class="px-6 py-6 text-xl">${transaction.returnDate}</td>
-                                <td class="px-6 py-6">
-                                    <button class="bg-teal-500 text-white text-xl px-6 py-3 rounded-xl hover:bg-teal-600" 
-                                            onclick="openReturnModal()">
-                                        <i class="fas fa-undo mr-2"></i>Return
-                                    </button>
-                                </td>
-                            </tr>
-                        </c:forEach>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+<!-- Current Checkouts -->
+<div class="mb-8">
+    <h2 class="text-3xl font-bold text-gray-800 mb-6">Current Checkouts</h2>
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-gray-50 rounded-t-xl">
+                <tr>
+                    <th class="px-6 py-4 text-left text-xl text-gray-600">Book Title</th>
+                    <th class="px-6 py-4 text-left text-xl text-gray-600">Due Date</th>
+                    <th class="px-6 py-4 text-left text-xl text-gray-600">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                <c:forEach items="${transactions}" var="transaction">
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-6 text-xl">${transaction.book.title}</td>
+                        <td class="px-6 py-6 text-xl">${transaction.returnDate}</td>
+                        <td class="px-6 py-6">
+                            <button class="bg-teal-500 text-white text-xl px-6 py-3 rounded-xl hover:bg-teal-600" 
+                                    onclick="openReturnModal(${transaction.book.id})">
+                                <i class="fas fa-book-reader mr-2"></i>Return
+                            </button>
+                        </td>
+                    </tr>
+                </c:forEach>
+            </tbody>
+        </table>
     </div>
 </div>
+
 
 <!-- Return Modal -->
 <div id="returnModal">
@@ -265,31 +364,60 @@
 <div id="addBookModal" class="modal">
     <div class="modal-content">
         <h3 class="text-2xl font-bold mb-4">Add New Book</h3>
-        <form action="/addBook" method="POST">
-            <input type="text" name="title" placeholder="Book Title" class="w-full mb-4 px-3 py-2 border rounded-lg">
-            <input type="text" name="author" placeholder="Author" class="w-full mb-4 px-3 py-2 border rounded-lg">
-            <input type="text" name="isbn" placeholder="ISBN" class="w-full mb-4 px-3 py-2 border rounded-lg">
-            <div class="flex justify-between">
-                <button type="button" class="bg-gray-500 text-white px-4 py-2 rounded-lg" onclick="closeModal('addBookModal')">Cancel</button>
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg">Add</button>
-            </div>
-        </form>
+        <input type="text" id="book_title" placeholder="Book Title" class="w-full mb-4 px-3 py-2 border rounded-lg" required>
+        <input type="text" id="book_author" placeholder="Author" class="w-full mb-4 px-3 py-2 border rounded-lg" required>
+        <input type="text" id="book_isbn" placeholder="ISBN" class="w-full mb-4 px-3 py-2 border rounded-lg" required>
+        <div class="flex justify-between">
+            <button type="button" class="bg-gray-500 text-white px-4 py-2 rounded-lg" onclick="closeModal('addBookModal')">Cancel</button>
+            <button type="button" class="bg-blue-600 text-white px-4 py-2 rounded-lg" onclick="addBook()">Add</button>
+        </div>
     </div>
 </div>
+
 
 <!-- Add User Modal -->
 <div id="addUserModal" class="modal">
     <div class="modal-content">
         <h3 class="text-2xl font-bold mb-4">Add New User</h3>
-        <form action="/addUser" method="POST">
-            <input type="text" name="name" placeholder="Name" class="w-full mb-4 px-3 py-2 border rounded-lg">
-            <input type="email" name="email" placeholder="Email" class="w-full mb-4 px-3 py-2 border rounded-lg">
-            <input type="password" name="password" placeholder="Password" class="w-full mb-4 px-3 py-2 border rounded-lg">
-            <div class="flex justify-between">
-                <button type="button" class="bg-gray-500 text-white px-4 py-2 rounded-lg" onclick="closeModal('addUserModal')">Cancel</button>
-                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg">Add</button>
+        <input type="text" id="new_name" placeholder="Name" class="w-full mb-4 px-3 py-2 border rounded-lg">
+        <input type="email" id="new_email" placeholder="Email" class="w-full mb-4 px-3 py-2 border rounded-lg">
+        <input type="password" id="new_password" placeholder="Password" class="w-full mb-4 px-3 py-2 border rounded-lg">
+        <div class="flex justify-between">
+            <button type="button" class="bg-gray-500 text-white px-4 py-2 rounded-lg" onclick="closeModal('addUserModal')">Cancel</button>
+            <button onclick="addUser()" class="bg-green-600 text-white px-4 py-2 rounded-lg">Add</button>
+        </div>
+        <div class="mt-6">
+            <h4 class="text-xl font-semibold mb-3">Active Users</h4>
+            <div class="max-h-64 overflow-y-auto border border-gray-300 rounded-lg p-3">
+                <table class="w-full text-left">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-3 py-2 font-medium text-gray-600">Name</th>
+                            <th class="px-3 py-2 font-medium text-gray-600">Email</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <c:forEach items="${users}" var="user">
+                            <tr>
+                                <td class="px-3 py-2">${user.name}</td>
+                                <td class="px-3 py-2">${user.email}</td>
+                            </tr>
+                        </c:forEach>
+                    </tbody>
+                </table>
             </div>
-        </form>
+        </div>
+    </div>
+</div>
+
+<!-- Search Results Modal -->
+<div id="searchResultsModal" class="modal">
+    <div class="modal-content">
+        <h3 class="text-2xl font-bold mb-4">Search Results</h3>
+        <div id="searchResultsContainer" class="max-h-64 overflow-y-auto border border-gray-300 rounded-lg p-3">
+            <!-- Search results will be dynamically inserted here -->
+        </div>
+        <button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600" onclick="closeModal('searchResultsModal')">Close</button>
     </div>
 </div>
 
@@ -298,8 +426,3 @@
 </footer>
 </body>
 </html>
-
-
-
-
-                

@@ -10,7 +10,9 @@ import java.sql.Connection;
 import java.util.stream.Collectors;
 import java.util.Date;
 import java.util.Calendar;
-
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 
 public class RootServlet extends HttpServlet {
 
@@ -20,6 +22,7 @@ public class RootServlet extends HttpServlet {
         UserDAO tmp_dao;
         BookDAO bd = new BookDAO();
         TransactionDAO td = new TransactionDAO();
+        Gson gson = new Gson(); // Gson for JSON handling
 
     public void init() throws ServletException{
         tmp_dao = new UserDAO();
@@ -109,9 +112,9 @@ public class RootServlet extends HttpServlet {
             // case "/":
             //     handleHome(request, response);
             //     break;
-            // case "/dashboard":
-            //     handleDashboard(request, response, session);
-            //     break;
+            case "/dashboard":
+                handleDashboard(request, response, session);
+                break;
             // case "/profile":
             //     handleProfile(request, response);
             //     break;
@@ -135,21 +138,84 @@ public class RootServlet extends HttpServlet {
     }
 
     private void handleDashboard(HttpServletRequest request, HttpServletResponse response, HttpSession session) throws ServletException, IOException {
+
         if (!UserDAO.isLoggedIn(session)){
             response.sendRedirect("/");
             return;
         }
-        
-        User user = tmp_dao.get((Integer) session.getAttribute("user_id"));
+        User user = tmp_dao.get((Integer) session.getAttribute("user_id"));        
+        String method = request.getMethod();
 
-        request.setAttribute("user", user);
-        request.setAttribute("transactions", td.getAllByUserId(user.id));
-        request.setAttribute("libraryName", "SJSU");
 
-        request.setAttribute("checked_count", td.getAllPending(user.id).size());
-        request.setAttribute("total_count", td.getAll(user.id).size());
-        request.setAttribute("due_count", td.getDueTransactions(user.id, 3).size());
-        request.getRequestDispatcher("/dashboard.jsp").forward(request, response);
+        if (method.equals("GET")) {
+            request.setAttribute("user", user);
+            request.setAttribute("transactions", td.getAllByUserId(user.id));
+            request.setAttribute("libraryName", "SJSU");
+
+            request.setAttribute("checked_count", td.getAllPending(user.id).size());
+            request.setAttribute("total_count", td.getAll(user.id).size());
+            request.setAttribute("due_count", td.getDueTransactions(user.id, 3).size());
+
+            if (user.isAdmin()){
+                request.setAttribute("admin_total_books", bd.getAll().size());
+                request.setAttribute("admin_total_checked", td.getAllPending().size());
+                request.setAttribute("admin_active_users", tmp_dao.getAll().size());
+            }
+
+            request.getRequestDispatcher("/dashboard.jsp").forward(request, response);
+        }else if (method.equals("POST")){
+                    // Handle JSON input and output
+                try {
+                    // Parse the JSON payload
+                    JsonObject requestData = gson.fromJson(request.getReader(), JsonObject.class);
+                    String action = requestData.has("action") ? requestData.get("action").getAsString() : null;
+
+                    JsonObject jsonResponse = new JsonObject();
+
+                    if (action == null) {
+                        jsonResponse.addProperty("status", "error");
+                        jsonResponse.addProperty("message", "Action is missing or invalid.");
+                        response.getWriter().write(gson.toJson(jsonResponse));
+                        return;
+                    }
+
+                    switch (action) {
+                        case "return":
+                            handleReturnAction(requestData, jsonResponse);
+                            break;
+
+                        case "add_book":
+                            handleAddBookAction(requestData, jsonResponse);
+                            break;
+
+                        case "add_user":
+                            handleAddUserAction(requestData, jsonResponse);
+                            break;
+
+                        case "check_out_book":
+                            handleCheckOutBookAction(requestData, jsonResponse);
+                            break;
+
+                        default:
+                            jsonResponse.addProperty("status", "error");
+                            jsonResponse.addProperty("message", "Unknown action: " + action);
+                    }
+
+                    // Respond with JSON
+                    response.setContentType("application/json");
+                    response.setCharacterEncoding("UTF-8");
+                    response.getWriter().write(gson.toJson(jsonResponse));
+                } catch (JsonSyntaxException e) {
+                    // Handle invalid JSON input
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    response.setContentType("application/json");
+                    response.setCharacterEncoding("UTF-8");
+                    JsonObject errorResponse = new JsonObject();
+                    errorResponse.addProperty("status", "error");
+                    errorResponse.addProperty("message", "Invalid JSON format.");
+                    response.getWriter().write(gson.toJson(errorResponse));
+                }
+        }
     }
 
     private void handleLogin(HttpServletRequest request, HttpServletResponse response, HttpSession session) throws ServletException, IOException {
@@ -189,13 +255,102 @@ public class RootServlet extends HttpServlet {
 
     }
 
-    private void handleSettings(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        request.setAttribute("message", "Here are your settings.");
-        request.getRequestDispatcher("/settings.jsp").forward(request, response);
-    }
-
     private void handleNotFound(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setStatus(HttpServletResponse.SC_NOT_FOUND);
         response.getWriter().write("404 - Page not found");
     }
+
+        // Handle Return Action
+    private void handleReturnAction(JsonObject requestData, JsonObject jsonResponse) {
+        // Simulate a book return
+        jsonResponse.addProperty("status", "success");
+        jsonResponse.addProperty("message", "Book returned successfully.");
+        // Add database logic for handling book return here in the future
+    }
+
+    // Handle Add Book Action
+    private void handleAddBookAction(JsonObject requestData, JsonObject jsonResponse) {
+        if (!requestData.has("data")) {
+            jsonResponse.addProperty("status", "error");
+            jsonResponse.addProperty("message", "Missing data payload.");
+            return;
+        }
+
+        JsonObject data = requestData.getAsJsonObject("data");
+
+        String title = data.has("title") ? data.get("title").getAsString() : null;
+        String author = data.has("author") ? data.get("author").getAsString() : null;
+        String isbn = data.has("isbn") ? data.get("isbn").getAsString() : null;
+
+        if (title == null || author == null || isbn == null) {
+            jsonResponse.addProperty("status", "error");
+            jsonResponse.addProperty("message", "Missing required fields: title, author, or ISBN.");
+            return;
+        }
+
+        // Simulate adding a book to the database
+        jsonResponse.addProperty("status", "success");
+        jsonResponse.addProperty("message", "Book added successfully.");
+        jsonResponse.addProperty("title", title);
+        jsonResponse.addProperty("author", author);
+        jsonResponse.addProperty("isbn", isbn);
+
+        // Add database logic for adding a book here
+    }
+
+    // Handle Add User Action
+    private void handleAddUserAction(JsonObject requestData, JsonObject jsonResponse) {
+        if (!requestData.has("data")) {
+            jsonResponse.addProperty("status", "error");
+            jsonResponse.addProperty("message", "Missing data payload.");
+            return;
+        }
+
+        JsonObject data = requestData.getAsJsonObject("data");
+
+        String name = data.has("name") ? data.get("name").getAsString() : null;
+        String email = data.has("email") ? data.get("email").getAsString() : null;
+        String password = data.has("password") ? data.get("password").getAsString() : null;
+
+        if (name == null || email == null || password == null) {
+            jsonResponse.addProperty("status", "error");
+            jsonResponse.addProperty("message", "Missing required fields: name, email, or password.");
+            return;
+        }
+
+        // Simulate adding a user to the database
+        jsonResponse.addProperty("status", "success");
+        jsonResponse.addProperty("message", "User added successfully.");
+        jsonResponse.addProperty("name", name);
+        jsonResponse.addProperty("email", email);
+
+        // Add database logic for adding a user here
+    }
+
+    // Handle Check Out Book Action
+    private void handleCheckOutBookAction(JsonObject requestData, JsonObject jsonResponse) {
+        if (!requestData.has("data")) {
+            jsonResponse.addProperty("status", "error");
+            jsonResponse.addProperty("message", "Missing data payload.");
+            return;
+        }
+
+        JsonObject data = requestData.getAsJsonObject("data");
+
+        Integer bookId = data.has("bookId") ? data.get("bookId").getAsInt() : null;
+
+        if (bookId == null) {
+            jsonResponse.addProperty("status", "error");
+            jsonResponse.addProperty("message", "Missing required field: bookId.");
+            return;
+        }
+
+        // Simulate checking out a book
+        jsonResponse.addProperty("status", "success");
+        jsonResponse.addProperty("message", "Book checked out successfully.");
+        jsonResponse.addProperty("bookId", bookId);
+
+        // Add database logic for checking out a book here
+    }
+
 }

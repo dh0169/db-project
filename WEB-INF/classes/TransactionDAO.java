@@ -151,6 +151,29 @@ public class TransactionDAO implements DAO<Transaction> {
             return transactions;
     }
 
+    public List<Transaction> getAllPending() {
+        String query = "SELECT * FROM Transactions WHERE completed is false";
+        List<Transaction> transactions = new ArrayList<>();
+
+            try (Connection conn = DBConnection.getConnection();
+                    PreparedStatement stmt = conn.prepareStatement(query)) {
+                ResultSet rs = stmt.executeQuery();
+                while (rs.next()) {
+                    transactions.add(new Transaction(
+                        rs.getInt("id"),
+                        new UserDAO().get(rs.getInt("user_id")),
+                        new BookDAO().get(rs.getInt("book_id")),
+                        rs.getDate("checkout_date"),
+                        rs.getDate("return_date"),
+                        rs.getBoolean("completed")
+                    ));
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            return transactions;
+    }
+
 public List<Transaction> getDueTransactions(int userId, int days) {
     String query = "SELECT * FROM Transactions WHERE user_id = ? AND return_date <= NOW() + INTERVAL ? DAY AND completed = false";
     List<Transaction> transactions = new ArrayList<>();
