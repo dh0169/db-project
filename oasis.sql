@@ -2,6 +2,7 @@ CREATE DATABASE oasisdb;
 
 USE oasisdb;
 
+
 -- Users Table
 CREATE TABLE Users (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -17,8 +18,7 @@ CREATE TABLE Books (
     id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     author VARCHAR(255) NOT NULL,
-    ISBN VARCHAR(13) UNIQUE NOT NULL,
-    qty INT NOT NULL
+    ISBN VARCHAR(13) UNIQUE NOT NULL
 );
 
 -- Transactions Table
@@ -28,16 +28,18 @@ CREATE TABLE Transactions (
     book_id INT NOT NULL,
     checkout_date DATE NOT NULL,
     return_date DATE,
-    completed BOOLEAN DEFAULT FALSE,
-    FOREIGN KEY (user_id) REFERENCES Users(id),
-    FOREIGN KEY (book_id) REFERENCES Books(id)
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
+    FOREIGN KEY (book_id) REFERENCES Books(id) ON DELETE CASCADE
 );
 
--- Create a new database user
-CREATE USER 'oasis'@'localhost' IDENTIFIED BY 'Password1!';
 
--- Grant all privileges on the oasisdb database to the new user
-GRANT ALL PRIVILEGES ON oasisdb.* TO 'oasis'@'localhost';
 
--- Apply the privilege changes
+-- New user, 'oasis'
+CREATE USER 'oasis'@'%' IDENTIFIED BY 'Password1!';
+
+-- Grant ALL permissions to the user 'oasis' on the 'oasisdb' database
+GRANT ALL ON oasisdb.* TO 'oasis'@'%';
+
+-- Apply the changes
 FLUSH PRIVILEGES;
+
