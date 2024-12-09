@@ -29,38 +29,37 @@
     </style>
 </head>
 <body class="bg-blue-50 min-h-screen text-lg">
-    <!-- Top Navigation Bar - Simplified for kiosk -->
-    <nav class="bg-white shadow-lg p-6">
-        <div class="max-w-5xl mx-auto flex justify-between items-center">
-            <div class="flex items-center space-x-4">
-                <img src="${pageContext.request.contextPath}/static/images/logo_sjsu.svg" alt="Library Logo" class="w-16 h-16">
-                <h1 class="text-3xl font-bold text-blue-600">${libraryName}</h1>
-            </div>
-            <div class="flex items-center">
-                <form action="logout" method="POST" class="inline-block">
-                    <button class="bg-red-500 text-white text-xl px-6 py-3 rounded-xl hover:bg-red-600" type="submit">
-                        <i class="fas fa-sign-out-alt mr-2"></i>End Session
-                    </button>
-                </form>
-            </div>
+<!-- Top Navigation Bar - Simplified for kiosk -->
+<nav class="bg-white shadow-lg p-4">
+    <div class="max-w-6xl mx-auto flex items-center justify-between space-x-6">
+        <!-- Logo and Library Name -->
+        <div class="flex items-center space-x-4">
+            <h1 class="text-2xl font-bold text-blue-600">${libraryName}</h1>
+            <img src="${pageContext.request.contextPath}/static/images/logo_sjsu.svg" alt="Library Logo" class="w-14 h-14">
         </div>
-    </nav>
+
+        <!-- Search Bar -->
+        <div class="flex-1 max-w-lg">
+            <input type="text" 
+                   placeholder="Search by title, author, or ISBN..." 
+                   class="w-full px-4 py-3 text-base rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <!-- Logout Button -->
+        <div>
+            <form action="logout" method="POST" class="flex items-center">
+                <button class="bg-red-500 text-white text-base px-4 py-2 rounded-lg hover:bg-red-600 flex items-center" type="submit">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                </button>
+            </form>
+        </div>
+    </div>
+</nav>
+
 
     <!-- Main Content -->
     <div class="max-w-5xl mx-auto p-4 sm:p-6">
         <div class="bg-white rounded-2xl shadow-xl p-6">
-            <!-- Search Bar - Larger for touch -->
-            <div class="mb-8">
-                <div class="flex gap-4">
-                    <input type="text" 
-                           placeholder="Search by title, author, or ISBN..." 
-                           class="flex-1 px-6 py-4 text-xl rounded-xl border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <button class="bg-blue-600 text-white px-8 py-4 text-xl rounded-xl hover:bg-blue-700">
-                        <i class="fas fa-search mr-2"></i>Search
-                    </button>
-                </div>
-            </div>
-
             <!-- Quick Stats - Larger, more touch-friendly -->
             <h2 class="text-3xl font-bold text-gray-800 mb-6">Hello ${sessionScope.user.name}!</h2>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">

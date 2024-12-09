@@ -23,6 +23,10 @@ RUN mkdir -p /opt/tomcat && \
 # Expose ports for MySQL and Tomcat
 EXPOSE 3306 8080
 
+
+#Clear all web apps
+RUN rm -rf /opt/tomcat/webapps/*
+
 # Copy application files to Tomcat's webapps directory
 COPY . /opt/tomcat/webapps/ROOT/
 

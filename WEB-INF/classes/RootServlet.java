@@ -84,21 +84,8 @@ public class RootServlet extends HttpServlet {
             case "/dashboard":
                 handleDashboard(request, response, session);
                 break;
-            case "/login":
-                response.sendRedirect("/");
-                break;
-
-            case "/logout":
-                response.sendRedirect("/");
-                break;
-            // case "/profile":
-            //     handleProfile(request, response);
-            //     break;
-            // case "/settings":
-            //     handleSettings(request, response);
-            //     break;
             default:
-                handleNotFound(request, response);
+                response.sendRedirect("/");
         }
     }
 
@@ -138,7 +125,7 @@ public class RootServlet extends HttpServlet {
                 handleLogout(request, response, session);
                 break;
             default:
-                handleNotFound(request, response);
+                response.sendRedirect("/");
         }
     }
 
@@ -157,6 +144,7 @@ public class RootServlet extends HttpServlet {
 
         request.setAttribute("user", user);
         request.setAttribute("transactions", td.getAllByUserId(user.id));
+        request.setAttribute("libraryName", "SJSU");
 
         request.setAttribute("checked_count", td.getAllPending(user.id).size());
         request.setAttribute("total_count", td.getAll(user.id).size());
