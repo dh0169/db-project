@@ -1,20 +1,49 @@
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import javax.servlet.http.HttpSession;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 public class UserDAO implements DAO<User> {
 
     @Override
     public User get(int id) {
         String query = "SELECT * FROM Users WHERE id = ?";
-        
+
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+             PreparedStatement stmt = conn.prepareStatement(query)) 
+        {
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                return new User(
-                    rs.getInt("id"),
+                return new User(rs.getInt("id"),
+                    rs.getString("name"),
+                    rs.getString("phone"),
+                    rs.getString("email"),
+                    rs.getString("password"),
+                    rs.getBoolean("is_admin")
+                );
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public User get(String email, String password_hash) {
+        String query = "SELECT * FROM Users WHERE email = ? AND password = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) 
+        {
+            stmt.setString(1, email);
+            stmt.setString(2, password_hash);
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return new User(rs.getInt("id"),
                     rs.getString("name"),
                     rs.getString("phone"),
                     rs.getString("email"),
@@ -95,4 +124,50 @@ public class UserDAO implements DAO<User> {
             e.printStackTrace();
         }
     }
+
+    public static boolean isLoggedIn(HttpSession session){
+
+        UserDAO tmp_dao = new UserDAO();
+
+
+        if (session.getAttribute("user_id") != null){
+            Integer user_id = (Integer) session.getAttribute("user_id");
+            if(tmp_dao.get(user_id) != null){
+                return true;
+            }
+
+        }
+
+        return false;
+    }
+
+        public static User logIn(String email, String password, HttpSession session){
+            //check email and hashed password, if they match database, set session['user_id'] = user.id
+            return null;
+    }
+
+    // Hashes a string using SHA256
+    public static String hashPassword(String password){
+        try{
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] encodedhash = digest.digest(password.getBytes(StandardCharsets.UTF_8));
+            return bytesToHex(encodedhash);   
+        }catch (NoSuchAlgorithmException e) {
+            System.out.println("Exception thrown : " + e);
+            return null;
+        }
+    }
+
+        private static String bytesToHex(byte[] hash) {
+        StringBuilder hexString = new StringBuilder(2 * hash.length);
+        for (byte b : hash) {
+            String hex = Integer.toHexString(0xff & b);
+            if (hex.length() == 1) {
+                hexString.append('0');
+            }
+            hexString.append(hex);
+        }
+        return hexString.toString();
+    }
+
 }

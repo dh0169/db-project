@@ -35,7 +35,7 @@ CREATE TABLE Transactions (
 CREATE USER 'oasis'@'localhost' IDENTIFIED BY 'Password1!';
 
 -- Grant all privileges on the oasisdb database to the new user
-GRANT ALL PRIVILEGES ON oasisdb.* TO 'oasis_user'@'localhost';
+GRANT ALL PRIVILEGES ON oasisdb.* TO 'oasis'@'localhost';
 
 -- Apply the privilege changes
 FLUSH PRIVILEGES;

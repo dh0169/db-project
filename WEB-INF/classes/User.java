@@ -1,5 +1,5 @@
 public class User {
-    private int id;
+    public int id;
     private String name;
     private String phone;
     private String email;
@@ -62,4 +62,16 @@ public class User {
     public void setAdmin(boolean admin) {
         isAdmin = admin;
     }
+    
+    @Override
+    public String toString() {
+        return "User{" +
+            "id=" + id +
+            ", name='" + name + '\'' +
+            ", phone='" + phone + '\'' +
+            ", email='" + email + '\'' +
+            ", isAdmin=" + isAdmin +
+            '}';
+    }
+
 }

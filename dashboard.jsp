@@ -1,4 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ page isELIgnored="false" %>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -34,9 +37,11 @@
                 <h1 class="text-3xl font-bold text-blue-600">${libraryName}</h1>
             </div>
             <div class="flex items-center">
-                <button class="bg-red-500 text-white text-xl px-6 py-3 rounded-xl hover:bg-red-600">
-                    <i class="fas fa-sign-out-alt mr-2"></i>End Session
-                </button>
+                <form action="logout" method="POST" class="inline-block">
+                    <button class="bg-red-500 text-white text-xl px-6 py-3 rounded-xl hover:bg-red-600" type="submit">
+                        <i class="fas fa-sign-out-alt mr-2"></i>End Session
+                    </button>
+                </form>
             </div>
         </div>
     </nav>
@@ -76,7 +81,7 @@
             </div>
 
             <!-- Admin Tools - Larger buttons for touch -->
-            <c:if test="${user.isAdmin}">
+            <c:if test="${isAdmin}">
                 <div class="mb-8 p-6 bg-yellow-50 rounded-xl">
                     <h2 class="text-3xl font-bold text-gray-800 mb-6">Administrative Tools</h2>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -146,7 +151,7 @@
         </div>
     </div>
 
-        <footer class="mt-10 text-gray-500">
+        <footer class="text-center mt-10 text-gray-500">
             &copy; 2024 Oasis Library Management System. All rights reserved.
         </footer>
 </body>
