@@ -66,12 +66,14 @@ public class User {
     @Override
     public String toString() {
         return "User{" +
-            "id=" + id +
-            ", name='" + name + '\'' +
-            ", phone='" + phone + '\'' +
-            ", email='" + email + '\'' +
-            ", isAdmin=" + isAdmin +
+            "id=" + id + // No null check needed; primitives cannot be null
+            ", name='" + (name != null ? name : "null") + '\'' +
+            ", phone='" + (phone != null ? phone : "null") + '\'' +
+            ", email='" + (email != null ? email : "null") + '\'' +
+            ", isAdmin=" + isAdmin + // No null check needed; primitives cannot be null
             '}';
     }
+
+
 
 }

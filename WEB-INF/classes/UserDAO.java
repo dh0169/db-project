@@ -96,6 +96,23 @@ public class UserDAO implements DAO<User> {
         }
     }
 
+    public Boolean save_status(User user) {
+        String query = "INSERT INTO Users (name, phone, email, password, is_admin) VALUES (?, ?, ?, ?, ?)";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, user.getName());
+            stmt.setString(2, user.getPhone());
+            stmt.setString(3, user.getEmail());
+            stmt.setString(4, user.getPassword());
+            stmt.setBoolean(5, user.isAdmin());
+            stmt.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     @Override
     public void update(User user) {
         String query = "UPDATE Users SET name = ?, phone = ?, email = ?, password = ?, is_admin = ? WHERE id = ?";

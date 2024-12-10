@@ -200,13 +200,9 @@ public List<Transaction> getDueTransactions(int userId, int days) {
 }
 
 
-
-
-
-
     @Override
     public void save(Transaction transaction) {
-        String query = "INSERT INTO Transactions (user_id, book_id, checkout_date, return_date) VALUES (?, ?, ?, ?)";
+        String query = "INSERT INTO Transactions (user_id, book_id, checkout_date, return_date, completed) VALUES (?, ?, ?, ?)";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -214,15 +210,17 @@ public List<Transaction> getDueTransactions(int userId, int days) {
             stmt.setInt(2, transaction.getBook().getId());
             stmt.setDate(3, new java.sql.Date(transaction.getCheckoutDate().getTime()));
             stmt.setDate(4, transaction.getReturnDate() != null ? new java.sql.Date(transaction.getReturnDate().getTime()) : null);
+            stmt.setBoolean(5, transaction.getCompleted());
             stmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    @Override
-    public void update(Transaction transaction) {
-        String query = "UPDATE Transactions SET user_id = ?, book_id = ?, checkout_date = ?, return_date = ? WHERE id = ?";
+
+
+    public Boolean save_status(Transaction transaction) {
+        String query = "INSERT INTO Transactions (user_id, book_id, checkout_date, return_date, completed) VALUES (?, ?, ?, ?)";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -230,7 +228,27 @@ public List<Transaction> getDueTransactions(int userId, int days) {
             stmt.setInt(2, transaction.getBook().getId());
             stmt.setDate(3, new java.sql.Date(transaction.getCheckoutDate().getTime()));
             stmt.setDate(4, transaction.getReturnDate() != null ? new java.sql.Date(transaction.getReturnDate().getTime()) : null);
-            stmt.setInt(5, transaction.getId());
+            stmt.setBoolean(5, transaction.getCompleted());
+            stmt.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public void update(Transaction transaction) {
+        String query = "UPDATE Transactions SET user_id = ?, book_id = ?, checkout_date = ?, return_date = ?, completed = ? WHERE id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, transaction.getUser().getId());
+            stmt.setInt(2, transaction.getBook().getId());
+            stmt.setDate(3, new java.sql.Date(transaction.getCheckoutDate().getTime()));
+            stmt.setDate(4, transaction.getReturnDate() != null ? new java.sql.Date(transaction.getReturnDate().getTime()) : null);
+            stmt.setBoolean(5, transaction.getCompleted());
+            stmt.setInt(6, transaction.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();

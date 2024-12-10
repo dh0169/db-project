@@ -76,6 +76,10 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        .scrollable-container {
+            height: auto; /* Allow height to grow */
+        }
     </style>
     <script>
         let searchTimeout;
@@ -86,13 +90,13 @@
 
             searchTimeout = setTimeout(() => {
                 if (query.trim() !== '') {
-                    fetch('/search', {
+                    fetch('/dashboard', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
                         credentials: 'same-origin',
-                        body: JSON.stringify({ query }),
+                        body: JSON.stringify({action: "search", data: { query: query} }),
                     })
                     .then(response => {
                         if (!response.ok) {
@@ -101,7 +105,7 @@
                         return response.json();
                     })
                     .then(data => {
-                        showSearchResults(data); // Display results in the modal
+                        showSearchResults(data.results); // Display results in the modal
                     })
                     .catch(error => {
                         console.error('Error:', error);
@@ -118,8 +122,10 @@
 
         function closeReturnModal() {
             document.getElementById("returnModal").style.display = "none";
-            sendPostRequestToDashboard('return', {id: localStorage.getItem("return_id")})
-            localStorage.clear();
+            sendPostRequestToDashboard('return', {id: localStorage.getItem("return_id")}, data => { 
+                localStorage.clear();
+                console.log(data);
+            });
         }
 
         function addUser(){
@@ -127,7 +133,7 @@
             const name = document.getElementById("new_name").value;
             const email = document.getElementById("new_email").value;
             const pw = document.getElementById("new_password").value; 
-            sendPostRequestToDashboard("add_user", {name : name, email : email, password : pw})
+            sendPostRequestToDashboard("add_user", {name : name, email : email, password : pw}, _ => {alert("New user created");})
         }
 
         function addBook() {
@@ -136,19 +142,17 @@
             const isbn = document.getElementById("book_isbn").value;
 
             if (title && author && isbn) {
-                sendPostRequestToDashboard("add_book", { title, author, isbn });
-                closeModal('addBookModal');
+                sendPostRequestToDashboard("add_book", { title, author, isbn }, data => {alert("Book added"); closeModal('addBookModal');});
             } else {
                 alert("Please fill out all fields.");
             }
         }
 
         function checkOutBook(bookId) {
-            sendPostRequestToDashboard("check_out_book", { bookId });
-            alert("Book checked out successfully!");
+            sendPostRequestToDashboard("check_out_book", { bookId }, _ => {alert("Book checked out successfully!");});
         }
 
-        function sendPostRequestToDashboard(action, json_data) {
+        function sendPostRequestToDashboard(action, json_data, handler) {
             fetch('/dashboard', {
                 method: 'POST',
                 headers: {
@@ -160,7 +164,9 @@
             .then(response => response.json())
             .then(data => {
                 if (data.status === "success") {
-                    alert(data.message);
+                    if (handler){
+                        handler(data);
+                    }
                     location.reload();
                 } else {
                     alert("Error: " + data.message);
@@ -179,7 +185,7 @@
         }
 
         function issueDatabaseDump() {
-            sendPostRequestToDashboard("db_dump", {});
+            sendPostRequestToDashboard("db_dump", {}, alert);
         }
 
         function showSearchResults(results) {
@@ -207,7 +213,10 @@
             const tbody = document.createElement('tbody');
             tbody.className = 'divide-y divide-gray-200';
 
+
             results.forEach(result => {
+                console.log(result); // Now prints the object
+                console.log(result.title); // Now prints the title
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td class="px-3 py-2">${result.title}</td>

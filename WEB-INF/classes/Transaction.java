@@ -58,6 +58,10 @@ public class Transaction {
         return this.completed;
     }
 
+    public void setCompleted() {
+        this.completed = true;
+    }
+
     public void setReturnDate(Date returnDate) {
         this.returnDate = returnDate;
     }
